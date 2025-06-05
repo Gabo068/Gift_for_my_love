@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cartas para Sentimientos</title>
+  <style>
+    /* CSS Variables for colors by sentiment */
+    :root {
+      --color-feliz: #f9d423;
+      --color-triste: #3a7bd5;
+      --color-estresado: #f54ea2;
+      --color-enojado: #ff4e50;
+      --color-ultimo-bg: linear-gradient(135deg, #667eea, #764ba2);
+      --color-text-light: #f0f0f0;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-family);
+      background: #111;
+      color: #eee;
+      overflow-x: hidden;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: #222;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1rem 0;
+      z-index: 10;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.7);
+    }
+
+    header button {
+      background: transparent;
+      border: none;
+      color: #bbb;
+      padding: 0.5rem 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 20px;
+      transition: background 0.3s, color 0.3s;
+      font-size: 1rem;
+    }
+
+    header button:hover,
+    header button.active {
+      background: #eee;
+      color: #222;
+      box-shadow: 0 4px 10px rgba(255 255 255 / 0.7);
+    }
+
+    main {
+      padding-top: 70px;
+      max-width: 800px;
+      margin: 0 auto 5rem;
+    }
+
+    section {
+      padding: 2rem;
+      margin: 2rem 1rem;
+      border-radius: 12px;
+      background: #222;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      transform-style: preserve-3d;
+      transition: transform 0.6s ease;
+      cursor: default;
+      position: relative;
+    }
+    section:not(:last-child) {
+      margin-bottom: 4rem;
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      font-size: 2rem;
+      text-align: center;
+      letter-spacing: 1px;
+      user-select: none;
+    }
+
+    .card-content {
+      font-size: 1.125rem;
+      line-height: 1.5;
+      text-align: center;
+      user-select: text;
+      white-space: pre-wrap;
+    }
+
+    /* Colors for sentiment cards */
+    #feliz {
+      border-top: 8px solid var(--color-feliz);
+      background: #2b2b0d;
+      color: #f9f9c5;
+    }
+
+    #triste {
+      border-top: 8px solid var(--color-triste);
+      background: #0b1a3d;
+      color: #a7c7ff;
+    }
+
+    #estresado {
+      border-top: 8px solid var(--color-estresado);
+      background: #37002f;
+      color: #f9b3df;
+    }
+
+    #enojado {
+      border-top: 8px solid var(--color-enojado);
+      background: #3d0b0b;
+      color: #ffbaba;
+    }
+
+    /* Último apartado con interactividad y colores brillantes */
+    #ultimo {
+      border-radius: 20px;
+      background-image: var(--color-ultimo-bg);
+      color: var(--color-text-light);
+      box-shadow:
+        0 0 30px 3px rgba(255, 255, 255, 0.35),
+        0 0 45px 8px rgba(118, 75, 162, 0.8);
+      padding: 3rem;
+      cursor: pointer;
+      perspective: 800px;
+      user-select: none;
+      overflow: hidden;
+      max-height: 500px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #ultimo h2 {
+      font-weight: 900;
+      text-shadow: 0 0 10px #fff;
+      flex-shrink: 0;
+    }
+
+    /* Make card-content scrollable with fixed height when open */
+    #ultimo .card-content {
+      font-size: 1.15rem;
+      margin-top: 1rem;
+      line-height: 1.6;
+      max-height: 220px;
+      overflow: hidden;
+      transition: max-height 0.6s ease, opacity 0.7s ease;
+      opacity: 0.9;
+      flex-grow: 1;
+      overflow-y: hidden;
+      text-align: left;
+      padding-right: 10px; /* For scrollbar spacing */
+      user-select: text;
+    }
+
+    #ultimo.open .card-content {
+      max-height: 340px;
+      overflow-y: auto;
+      opacity: 1;
+    }
+
+    #ultimo .hint {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      opacity: 0.75;
+      font-style: italic;
+      user-select: none;
+      flex-shrink: 0;
+      text-align: center;
+    }
+
+    /* Animación de brillo pulsante para el último */
+    @keyframes pulse-glow {
+      0%, 100% {
+        box-shadow:
+          0 0 25px 4px rgba(255,255,255,0.4),
+          0 0 40px 10px rgba(118, 75, 162, 0.7);
+      }
+      50% {
+        box-shadow:
+          0 0 35px 6px rgba(255,255,255,0.7),
+          0 0 55px 15px rgba(118, 75, 162, 1);
+      }
+    }
+
+    #ultimo.open {
+      animation: pulse-glow 3s ease-in-out infinite;
+      transform: rotateY(10deg) scale(1.02);
+    }
+
+    /* Partículas animadas en último apartado */
+    #particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+      border-radius: 20px;
+      z-index: 0;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      pointer-events:none;
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="tab active" data-target="feliz" aria-label="Ver carta feliz">Feliz</button>
+    <button class="tab" data-target="triste" aria-label="Ver carta triste">Triste</button>
+    <button class="tab" data-target="estresado" aria-label="Ver carta estresado">Estresada</button>
+    <button class="tab" data-target="enojado" aria-label="Ver carta enojado">Enojada</button>
+    <button class="tab" data-target="ultimo" aria-label="Ver carta de profunda reflexión">No puedo más</button>
+  </header>
+
+  <main>
+    <section id="feliz" class="card visible" tabindex="0" role="region" aria-label="Carta para cuando estés feliz">
+      <h2>Cuando estés feliz</h2>
+      <div class="card-content">
+        Hola cariño :3,<br><br>
+        Si estás leyendo esto, es porque estás feliz, y eso me llena el alma aunque no esté ahí contigo en este momento.
+
+Quiero que sepas que cada vez que sonríes, incluso si no estoy presente, algo en mí también se ilumina. Me alegra imaginarte contenta, emocionada, riéndote como solo tú sabes hacerlo. Porque tu felicidad es la mía, aunque estemos a kilómetros de distancia o simplemente no pueda responderte en ese instante.
+
+Te admiro muchísimo por cómo encuentras alegría incluso en las cosas pequeñas. Por cómo ves lo bueno, por cómo te ríes con el corazón. Y aunque no esté ahí para celebrarlo contigo ahora, quiero que sepas que estoy orgulloso de ti, que me haces sentir afortunado cada día solo por existir.
+
+Así que sigue disfrutando ese momento bonito. Vive esa alegría por los dos. Y cuando me leas, imagina que estoy ahí a tu lado, tomándote de la mano, sonriendo contigo en silencio, feliz solo porque tú lo estás.
+
+Te amo más de lo que caben en estas palabras.
+Y aunque no esté ahora, siempre estoy contigo en pensamiento y corazón.
+
+Con todo mi amor, Gabriel (Tu noviecito :3) 
+      </div>
+    </section>
+
+    <section id="triste" class="card" tabindex="0" role="region" aria-label="Carta para cuando estés triste" hidden>
+      <h2>Cuando estés triste</h2>
+      <div class="card-content">
+        Hola cielo,<br><br>
+        Si estás leyendo esto, es porque algo te tiene triste… y aunque me duele no estar contigo en este momento, quiero que sientas mi abrazo en cada palabra.
+
+No sé exactamente qué pasó, pero sí sé una cosa con total certeza: tú eres fuerte, valiente y mereces todo lo bonito del mundo, incluso en los días grises.
+Y aunque no pueda responderte ahora, no significa que no esté contigo. Estoy pensando en ti, apoyándote en silencio, y deseando poder secarte esas lágrimas con mis manos.
+
+Si pudiera estar ahí, te abrazaría tan fuerte que el mundo se te haría chiquito y seguro por un rato. Te recordaría todo lo que vales, lo increíble que eres y cómo incluso tus momentos tristes forman parte de la hermosa persona que amo.
+
+Tómate tu tiempo para sentir. No estás sola. Esta tristeza también pasará, y cuando lo haga, ahí estaré yo, como siempre, para sonreír contigo.
+
+Estoy contigo, aunque no pueda escribirte en este momento. Estoy contigo en cada pensamiento, en cada latido, en cada parte de ti que no quiero soltar jamás.
+
+Te amo más de lo que las palabras pueden decir.
+Y estoy orgulloso de ti… incluso cuando lloras.
+Quiero que seoas que no importa lo que pase siempre estare para ti, me esforzare mucho por nosotros.
+Y si te sirve de algo, eso me hhace muy feliz, TU me haces muy feliz.
+Con todo mi amor, 
+Gabriel(Su esposito UwU)
+      </div>
+    </section>
+
+    <section id="estresado" class="card" tabindex="0" role="region" aria-label="Carta para cuando estés estresado" hidden>
+      <h2>Cuando estés estresada</h2>
+      <div class="card-content">
+        Hola mi niña de ojitos bonitos :3,<br><br>
+        Si estás leyendo esto, es porque el mundo se te está haciendo un poco pesado hoy… Y aunque no pueda estar contigo justo ahora, quiero que estas palabras sean como un respiro suave entre tanto caos.
+
+Respira.
+Haz una pausa.
+No todo tienes que resolverlo de golpe. No todo tienes que cargarlo sola.
+
+Eres increíble, ¿sabes? Lo valiente que eres, lo mucho que haces, cómo te esfuerzas por todo… aunque muchas veces ni tú misma te das el crédito que mereces. Pero yo lo veo, lo valoro, y te admiro tanto por eso.
+
+No me importa si hoy te sientes agotada, abrumada o con ganas de desaparecer un rato del mundo. Estoy contigo. Siempre estoy contigo. Y aunque no pueda responderte al momento, en mi corazón te estoy abrazando con fuerza y diciéndote: “Lo estás haciendo bien, mi amor. Ya pasará”.
+
+Permítete descansar. No tienes que tener el control de todo. A veces, solo necesitas respirar, cerrar los ojos, y recordar que no estás sola. Yo creo en ti, incluso cuando tú te olvides de hacerlo.
+
+Te amo con calma, con paciencia, con ternura… incluso en tus días más caóticos.
+Estoy aquí, esperando con los brazos abiertos para cuando necesites volver a sentirte ligera.
+Que sepas que siempre te apoyare :3
+Con todo mi amor,
+Gabriel (El patron xd)
+      </div>
+    </section>
+
+    <section id="enojado" class="card" tabindex="0" role="region" aria-label="Carta para cuando estés enojado" hidden>
+      <h2>Cuando estés enojada</h2>
+      <div class="card-content">
+        Hola mi vida chula, bella, hermosa, priciosa, divina, perfecta uwuw,<br><br>
+        Si estás leyendo esto, supongo que algo te hizo enojar… y aunque no puedo estar contigo justo ahora, quiero que sepas que estoy de tu lado, incluso cuando el mundo parece estar en contra.
+
+No vengo a decirte que no te enojes, ni a minimizar lo que sientes. Está bien estar molesta. Tienes todo el derecho del mundo a sentir lo que estás sintiendo. Solo quiero que, aunque estés furiosa o frustrada, recuerdes esto: yo estoy aquí, contigo y para ti.
+
+No importa si no sé exactamente qué pasó. Estoy dispuesto a escuchar, a comprenderte, a darte tu espacio si lo necesitas o abrazarte si eso te calma.
+No estás sola en esto. No quiero pelear contigo, quiero ser paz para ti. Quiero ser el lugar seguro al que puedas volver cuando todo te sature.
+
+Si en este momento necesitas respirar, gritarle al mundo o simplemente estar en silencio… está bien. Hazlo. Y cuando te sientas lista, estaré aquí. No para juzgar, sino para acompañarte.
+
+Te amo también cuando estás enojada, porque sé que detrás de todo eso hay un corazón que siente profundo. Y ese corazón es el que yo elegí amar, con todo lo que venga.
+
+Con calma, paciencia y mucho amor,
+Gabriel (Tu osito cariñosito :3)
+
+
+      </div>
+    </section>
+
+    <section id="ultimo" class="card" tabindex="0" role="region" aria-label="Carta para cuando ya no puedas más" hidden>
+      <div id="particles"></div>
+      <h2>Cuando sientas que ya no puedes más</h2>
+      <div class="card-content">
+        <p>
+          A veces el alma duele tanto que parece romperse en pedazos irremediablemente.<br>
+
+          <strong>Hazme clic para descubrir un mensaje que te volverá a levantar.</strong>
+        </p>
+      </div>
+      <div class="hint">Haz clic en esta carta para revelar el mensaje secreto</div>
+    </section>
+  </main>
+
+  <script>
+    // Navegación entre secciones con tabs
+    const tabs = document.querySelectorAll("header .tab");
+    const sections = document.querySelectorAll("main section");
+
+    function showSection(id) {
+      sections.forEach(sec => {
+        if (sec.id === id) {
+          sec.hidden = false;
+          sec.classList.add("visible");
+          sec.setAttribute("tabindex", "0");
+        } else {
+          sec.hidden = true;
+          sec.classList.remove("visible");
+          sec.setAttribute("tabindex", "-1");
+        }
+      });
+      tabs.forEach(tab => {
+        if (tab.dataset.target === id) {
+          tab.classList.add("active");
+          tab.setAttribute("aria-selected", "true");
+          tab.setAttribute("tabindex", "0");
+        } else {
+          tab.classList.remove("active");
+          tab.setAttribute("aria-selected", "false");
+          tab.setAttribute("tabindex", "-1");
+        }
+      });
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        showSection(tab.dataset.target);
+      });
+      tab.addEventListener("keydown", (e) => {
+        if(e.key === "ArrowRight" || e.key === "ArrowLeft"){
+          let idx = Array.from(tabs).indexOf(e.target);
+          if(e.key === "ArrowRight") idx++;
+          if(e.key === "ArrowLeft") idx--;
+          if(idx < 0) idx = tabs.length - 1;
+          if(idx >= tabs.length) idx = 0;
+          tabs[idx].focus();
+        }
+      });
+    });
+
+    // Inicial mostrar primera sección
+    showSection("feliz");
+
+    // Interactividad para último apartado
+    const ultimo = document.getElementById("ultimo");
+    const cardContent = ultimo.querySelector(".card-content");
+    const hint = ultimo.querySelector(".hint");
+    let revealed = false;
+
+    ultimo.addEventListener("click", () => {
+      if (!revealed) {
+        cardContent.innerHTML = `
+          <p>
+           Si estás leyendo esto, es porque todo pesa más de lo que deberías cargar sola.
+Y aunque no estoy contigo en este instante, quiero que esta carta sea mi forma de abrazarte por dentro, justo donde más lo necesitas.
+
+Sé que hay días en los que el mundo parece girar demasiado rápido o demasiado lento.
+Días en los que incluso respirar duele.
+Días donde nada se acomoda y todo parece romperse, incluso tú.
+
+Si hoy es uno de esos días…
+Déjame decirte algo: no estás rota. Solo estás cansada.
+Y eso está bien. Estar cansada no te hace débil. Sentirte perdida no te hace menos valiosa. Sentirte confundida, triste o sin fuerzas no borra lo maravillosa que eres.
+
+Mi amor…
+Si tan solo pudieras verte desde mis ojos cuando te sientes así.
+Verías a una persona increíble, hecha de luz, de ternura, de fuerza aunque tiemble.
+Verías lo mucho que vales, incluso cuando tú misma no lo crees.
+Verías todo lo que has superado, incluso cuando pensabas que no saldrías de ahí.
+
+Hoy, no tienes que ser fuerte.
+No tienes que sonreír, ni forzar nada.
+Hoy puedes simplemente ser.
+Llorar si lo necesitas. Dormir. Callar. Gritar en silencio.
+Lo que sientas está bien.
+Y nada, absolutamente nada de lo que sientas hará que yo deje de amarte.
+
+Quiero que este espacio sea tu rincón seguro.
+Un pequeño respiro en medio del caos.
+Imagina que estás entre mis brazos, con tu cabeza en mi pecho, y que no tienes que fingir nada. Solo existir.
+Y yo estoy ahí, acariciando tu espalda con calma, diciendo bajito:
+"Aquí estoy, amor. No tienes que cargar el mundo sola. Yo lo cargo contigo."
+
+Si alguna vez sientes que ya no puedes más, recuerda esto:
+No viniste a este mundo a ser perfecta. Viniste a sentir, a vivir, a aprender y, sobre todo, a ser amada incluso en tus sombras.
+Y yo te amo así.
+Con tus sonrisas, pero también con tus lágrimas.
+Con tus momentos de fuerza… y con tus momentos de rendición.
+
+Tómate tu tiempo. Respira.
+Y cuando vuelvas a mirar al cielo, aunque sea con los ojos mojados, quiero que recuerdes que yo estoy bajo el mismo cielo, esperando para tomarte de la mano. Siempre.
+
+No importa cuántas veces el mundo se desordene.
+Contigo, yo siempre voy a querer reconstruirlo, con calma, con amor, con paciencia… y contigo a mi lado.
+
+Te amo infinitamente,
+En tu calma y en tu tormenta,<br><br>
+            <em>“El coraje no es la ausencia de miedo, es avanzar a pesar de él.”</em>
+          </p>
+          <p style="margin-top:1rem; font-size:0.9rem; opacity:0.85; text-align:center;">
+            Vuelve a hacer clic para cerrar esta carta.
+          </p>
+        `;
+        ultimo.classList.add("open");
+        hint.style.display = "none";
+        revealed = true;
+      } else {
+        cardContent.innerHTML = `
+          <p>
+            A veces el alma duele tanto que parece romperse en pedazos irremediablemente.<br>
+            Pero dentro de esa oscuridad visible, una chispa inextinguible de esperanza parpadea.<br>
+            <strong>Hazme clic para descubrir un mensaje que te volverá a levantar.</strong>
+          </p>
+        `;
+        ultimo.classList.remove("open");
+        hint.style.display = "block";
+        revealed = false;
+      }
+    });
+
+    // Crear partículas animadas para último apartado
+    const particlesContainer = document.getElementById('particles');
+    const particleCount = 30;
+    const colors = [
+      'rgba(255,255,255,0.7)',
+      'rgba(182, 155, 255, 0.8)', 
+      'rgba(255, 255, 255, 0.4)'
+    ];
+
+    for(let i=0; i < particleCount; i++){
+      const p = document.createElement('div');
+      p.classList.add('particle');
+      const size = Math.random() * 8 + 4;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.background = colors[Math.floor(Math.random()*colors.length)];
+      p.style.top = (Math.random()*100) + '%';
+      p.style.left = (Math.random()*100) + '%';
+      p.style.animationDuration = (3 + Math.random()*4) + 's';
+      p.style.animationName = `moveParticle${i}`;
+      p.style.opacity = 0.7;
+      particlesContainer.appendChild(p);
+    }
+  </script>
+</body>
+</html>
+
+
